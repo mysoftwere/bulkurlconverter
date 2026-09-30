@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulk URL Converter</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#172033;
+  transition:background .2s,color .2s
+}
+.topbar{max-width:980px;margin:14px auto 0;padding:0 16px;display:flex;justify-content:flex-end}
+.theme-btn{
+  border:1px solid #cfd8e3;background:#fff;color:#25324a;padding:8px 12px;
+  border-radius:9px;font-size:12px;font-weight:700;cursor:pointer
+}
+.theme-btn:hover{background:#f1f4f8}
+
+body.dark{background:#111827;color:#e5e7eb}
+body.dark .card{background:#1b2433;border-color:#303b4d;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+body.dark .sub,body.dark .option-title,body.dark .note,body.dark .status{color:#9aa7b8}
+body.dark input,body.dark textarea{background:#111827;color:#e5e7eb;border-color:#3a4658}
+body.dark input::placeholder,body.dark textarea::placeholder{color:#7f8b9d}
+body.dark .btn,body.dark .theme-btn{background:#202b3b;color:#e5e7eb;border-color:#3a4658}
+body.dark .btn:hover,body.dark .theme-btn:hover{background:#283548}
+body.dark .btn.primary{background:#315efb;color:#fff;border-color:#315efb}
+body.dark .saved{background:#151e2b;border-color:#303b4d}
+body.dark .saved-head{border-color:#303b4d}
+body.dark .domain-item{border-color:#293547}
+body.dark .saved-domain{color:#dbe3ee}
+body.dark .small-btn{background:#202b3b;color:#e5e7eb;border-color:#3a4658}
+body.dark .small-btn:hover{background:#2b3a50}
+body.dark .yn{background:#202b3b;border-color:#3a4658}
+body.dark .choice{color:#9aa7b8}
+body.dark .choice.active{background:#2a3546;color:#78a0ff}
+body.dark .output textarea{background:#111827}
+
+@media (prefers-color-scheme: dark){
+  body:not(.light-mode){background:#111827;color:#e5e7eb}
+  body:not(.light-mode) .card{background:#1b2433;border-color:#303b4d;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+  body:not(.light-mode) .sub,
+  body:not(.light-mode) .option-title,
+  body:not(.light-mode) .note,
+  body:not(.light-mode) .status{color:#9aa7b8}
+  body:not(.light-mode) input,
+  body:not(.light-mode) textarea{background:#111827;color:#e5e7eb;border-color:#3a4658}
+  body:not(.light-mode) input::placeholder,
+  body:not(.light-mode) textarea::placeholder{color:#7f8b9d}
+  body:not(.light-mode) .btn,
+  body:not(.light-mode) .theme-btn{background:#202b3b;color:#e5e7eb;border-color:#3a4658}
+  body:not(.light-mode) .saved{background:#151e2b;border-color:#303b4d}
+  body:not(.light-mode) .saved-head{border-color:#303b4d}
+  body:not(.light-mode) .domain-item{border-color:#293547}
+  body:not(.light-mode) .saved-domain{color:#dbe3ee}
+  body:not(.light-mode) .small-btn{background:#202b3b;color:#e5e7eb;border-color:#3a4658}
+  body:not(.light-mode) .yn{background:#202b3b;border-color:#3a4658}
+  body:not(.light-mode) .choice{color:#9aa7b8}
+  body:not(.light-mode) .choice.active{background:#2a3546;color:#78a0ff}
+  body:not(.light-mode) .output textarea{background:#111827}
+}
+.wrap{max-width:980px;margin:28px auto;padding:0 16px}
+.card{
+  background:#fff;border:1px solid #e1e7ef;border-radius:16px;
+  box-shadow:0 8px 28px rgba(20,35,60,.07);padding:20px;
+}
+h1{margin:0 0 5px;font-size:23px}
+.sub{margin:0 0 20px;color:#697586;font-size:13px}
+label{display:block;font-weight:700;font-size:13px;margin-bottom:7px}
+textarea,input{
+  width:100%;border:1px solid #cfd8e3;border-radius:10px;
+  padding:11px 12px;font-size:14px;outline:none;background:#fff;
+}
+textarea:focus,input:focus{border-color:#6b8afd;box-shadow:0 0 0 3px rgba(107,138,253,.12)}
+textarea{min-height:220px;resize:vertical}
+.domain-row{display:flex;gap:8px;align-items:center}
+.domain{flex:1}
+.btn{
+  border:1px solid #cfd8e3;background:#fff;color:#25324a;
+  padding:9px 13px;border-radius:9px;font-size:12px;font-weight:700;
+  cursor:pointer;white-space:nowrap
+}
+.btn:hover{background:#f4f7fb}
+.btn.primary{background:#315efb;color:#fff;border-color:#315efb}
+.btn.danger{color:#c62828}
+.status{font-size:11px;color:#6b7789;margin-top:6px;min-height:15px}
+
+.saved{
+  margin-top:12px;border:1px solid #e1e7ef;border-radius:11px;
+  background:#fafbfd;overflow:hidden
+}
+.saved-head{
+  padding:9px 11px;border-bottom:1px solid #e5eaf1;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;font-weight:700
+}
+.saved-count{color:#7b8797;font-weight:600}
+.domain-list{max-height:180px;overflow:auto}
+.domain-item{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border-bottom:1px solid #edf0f4
+}
+.domain-item:last-child{border-bottom:0}
+.num{width:25px;text-align:center;color:#7b8797;font-size:12px;font-weight:700}
+.saved-domain{
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:12px;color:#26344a
+}
+.domain-actions{display:flex;gap:5px}
+.small-btn{
+  border:1px solid #d5dce6;background:#fff;border-radius:7px;
+  padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer
+}
+.small-btn:hover{background:#eef3ff}
+.small-btn.delete{color:#c62828}
+.empty{padding:12px;color:#8a95a5;font-size:12px;text-align:center}
+
+.options{
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:16px 0
+}
+.option{display:flex;align-items:center;gap:7px}
+.option-title{font-size:12px;font-weight:700;color:#596579}
+.yn{
+  display:inline-flex;gap:3px;padding:3px;background:#eef2f7;
+  border-radius:10px;border:1px solid #d8e0ea
+}
+.choice{
+  border:0;background:transparent;padding:7px 11px;border-radius:7px;
+  font-size:12px;font-weight:700;color:#647084;cursor:pointer
+}
+.choice.active{background:#fff;color:#315efb;box-shadow:0 1px 4px rgba(0,0,0,.10)}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.output{margin-top:18px}
+.output textarea{min-height:220px;background:#fbfcfe}
+.note{font-size:11px;color:#788495;margin-top:8px;line-height:1.5}
+
+@media(max-width:600px){
+  .wrap{margin:14px auto;padding:0 10px}
+  .card{padding:14px;border-radius:13px}
+  h1{font-size:20px}
+  .domain-row{flex-wrap:wrap}
+  .domain{flex-basis:100%}
+  .domain-row>.btn{flex:1}
+  .options{gap:9px}
+  .actions .btn{flex:1}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button id="themeToggle" class="theme-btn" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌙 Dark</button>
+</div>
+<div class="wrap">
+  <div class="card">
+    <h1>Bulk URL Converter</h1>
+    <p class="sub">Replace domains, optionally convert path slashes to %2F, and reuse saved domains.</p>
+
+    <label for="domain">Fixed Document / Domain</label>
+    <div class="domain-row">
+      <input id="domain" class="domain" type="text" placeholder="https://meded.ucmerced.edu">
+      <button class="btn primary" onclick="saveDomain()">Save</button>
+      <button class="btn danger" onclick="clearCurrentDomain()">Clear</button>
+    </div>
+    <div id="saveStatus" class="status"></div>
+
+    <div class="saved">
+      <div class="saved-head">
+        <span>Saved Domains</span>
+        <span id="savedCount" class="saved-count">0</span>
+      </div>
+      <div id="domainList" class="domain-list">
+        <div class="empty">No saved domains yet.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px">
+      <label for="urls">URLs — one per line</label>
+      <textarea id="urls" placeholder="https://engineeringgrads.ucmerced.edu/sites/g/files/ufvvjh821/f/webform/gowcq.pdf&#10;https://example.com/path/file.pdf"></textarea>
+    </div>
+
+    <div class="options">
+      <div class="option">
+        <span class="option-title">Fixed Domain</span>
+        <div class="yn">
+          <button id="fixedYes" class="choice active" onclick="setFixed(true)">YES</button>
+          <button id="fixedNo" class="choice" onclick="setFixed(false)">NO</button>
+        </div>
+      </div>
+
+      <div class="option">
+        <span class="option-title">%2F Conversion</span>
+        <div class="yn">
+          <button id="slashYes" class="choice" onclick="setMode(true)">YES</button>
+          <button id="slashNo" class="choice" onclick="setMode(false)">NO</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" onclick="convert()">Convert</button>
+      <button class="btn" onclick="copyAll()">Copy All</button>
+      <button class="btn danger" onclick="clearUrls()">Clear URLs</button>
+    </div>
+
+    <div class="output">
+      <label for="output">Converted URLs</label>
+      <textarea id="output" readonly placeholder="Converted URLs will appear here..."></textarea>
+      <div class="note">
+        Saved domains are stored in this browser. Select any saved domain to load it into the Fixed Domain box.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let useFixed = true;
+let encodeSlash = false;
+const domainInput = document.getElementById('domain');
+const output = document.getElementById('output');
+const saveStatus = document.getElementById('saveStatus');
+
+function normalizeDomain(v){
+  v = (v || '').trim();
+  if(!v) return '';
+  if(!/^https?:\/\//i.test(v)) v = 'https://' + v;
+  try{
+    const u = new URL(v);
+    return u.origin;
+  }catch(e){
+    return v.replace(/\/+$/,'');
+  }
+}
+
+function getSavedDomains(){
+  try{
+    return JSON.parse(localStorage.getItem('savedDomains') || '[]');
+  }catch(e){
+    return [];
+  }
+}
+
+function setSavedDomains(list){
+  try{
+    localStorage.setItem('savedDomains', JSON.stringify(list));
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function renderSavedDomains(){
+  const list = getSavedDomains();
+  const box = document.getElementById('domainList');
+  document.getElementById('savedCount').textContent = list.length;
+
+  if(!list.length){
+    box.innerHTML = '<div class="empty">No saved domains yet.</div>';
+    return;
+  }
+
+  box.innerHTML = list.map((d,i)=>`
+    <div class="domain-item">
+      <div class="num">${i+1}</div>
+      <div class="saved-domain" title="${escapeHtml(d)}">${escapeHtml(d)}</div>
+      <div class="domain-actions">
+        <button class="small-btn" onclick="selectDomain(${i})">Select</button>
+        <button class="small-btn delete" onclick="deleteDomain(${i})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[c]));
+}
+
+function saveDomain(){
+  const domain = normalizeDomain(domainInput.value);
+  if(!domain){
+    saveStatus.textContent = 'Enter a domain first.';
+    return;
+  }
+
+  domainInput.value = domain;
+  let list = getSavedDomains();
+
+  // Keep one copy of each domain; move the selected domain to the top.
+  list = list.filter(d => d.toLowerCase() !== domain.toLowerCase());
+  list.unshift(domain);
+
+  if(!setSavedDomains(list)){
+    saveStatus.textContent = 'Browser storage is blocked.';
+    return;
+  }
+
+  saveStatus.textContent = 'Saved ✓';
+  renderSavedDomains();
+}
+
+function selectDomain(index){
+  const list = getSavedDomains();
+  if(!list[index]) return;
+  domainInput.value = list[index];
+  saveStatus.textContent = 'Selected ✓';
+}
+
+function deleteDomain(index){
+  let list = getSavedDomains();
+  if(!list[index]) return;
+  list.splice(index,1);
+  setSavedDomains(list);
+  renderSavedDomains();
+  saveStatus.textContent = 'Deleted ✓';
+}
+
+function clearCurrentDomain(){
+  domainInput.value = '';
+  saveStatus.textContent = 'Domain box cleared.';
+}
+
+function setFixed(v){
+  useFixed = v;
+  document.getElementById('fixedYes').classList.toggle('active',v);
+  document.getElementById('fixedNo').classList.toggle('active',!v);
+}
+
+function setMode(v){
+  encodeSlash = v;
+  document.getElementById('slashYes').classList.toggle('active',v);
+  document.getElementById('slashNo').classList.toggle('active',!v);
+}
+
+function encodePath(path){
+  path = path.replace(/%2f/gi,'/');
+  if(path.startsWith('/')){
+    return '/' + path.slice(1).replaceAll('/','%2F');
+  }
+  return path.replaceAll('/','%2F');
+}
+
+function encodeFullUrlPath(src){
+  try{
+    const u = new URL(src);
+    u.pathname = encodePath(u.pathname);
+    return u.toString();
+  }catch(e){
+    return src;
+  }
+}
+
+function convert(){
+  const lines = document.getElementById('urls').value
+    .split(/\r?\n/)
+    .map(x=>x.trim())
+    .filter(Boolean);
+
+  const domain = normalizeDomain(domainInput.value);
+
+  if(!lines.length){
+    output.value = '';
+    return;
+  }
+
+  const results = lines.map(src=>{
+    if(!useFixed || !domain){
+      return encodeSlash ? encodeFullUrlPath(src) : src;
+    }
+
+    try{
+      const u = new URL(src);
+      let path = u.pathname + u.search + u.hash;
+      if(encodeSlash) path = encodePath(path);
+      return domain + path;
+    }catch(e){
+      return src;
+    }
+  });
+
+  output.value = results.join('\n');
+}
+
+async function copyAll(){
+  if(!output.value) return;
+  try{
+    await navigator.clipboard.writeText(output.value);
+  }catch(e){
+    output.select();
+    document.execCommand('copy');
+  }
+}
+
+function clearUrls(){
+  document.getElementById('urls').value = '';
+  output.value = '';
+}
+
+function applyTheme(dark, manual=false){
+  document.body.classList.toggle('dark', dark);
+  document.body.classList.toggle('light-mode', manual && !dark);
+  const btn = document.getElementById('themeToggle');
+  btn.textContent = dark ? '☀️ Light' : '🌙 Dark';
+
+  try{
+    if(manual){
+      localStorage.setItem('darkMode', dark ? '1' : '0');
+      localStorage.setItem('themeManual', '1');
+    }else{
+      localStorage.removeItem('darkMode');
+      localStorage.removeItem('themeManual');
+    }
+  }catch(e){}
+}
+
+function toggleDarkMode(){
+  const isDark = document.body.classList.contains('dark');
+  applyTheme(!isDark, true);
+}
+
+// Follow the device/browser system theme when the user has not manually selected one.
+const systemTheme = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+function loadTheme(){
+  let saved = null, manual = false;
+  try{
+    saved = localStorage.getItem('darkMode');
+    manual = localStorage.getItem('themeManual') === '1';
+  }catch(e){}
+
+  if(manual && saved !== null){
+    applyTheme(saved === '1', true);
+  }else{
+    const dark = systemTheme ? systemTheme.matches : false;
+    applyTheme(dark, false);
+  }
+}
+
+if(systemTheme){
+  const themeChanged = () => {
+    let manual = false;
+    try{ manual = localStorage.getItem('themeManual') === '1'; }catch(e){}
+    if(!manual) applyTheme(systemTheme.matches, false);
+  };
+  if(systemTheme.addEventListener) systemTheme.addEventListener('change', themeChanged);
+  else if(systemTheme.addListener) systemTheme.addListener(themeChanged);
+}
+
+// Load saved domain and theme automatically.
+(function init(){
+  const list = getSavedDomains();
+  if(list.length) domainInput.value = list[0];
+  renderSavedDomains();
+  loadTheme();
+})();
+</script>
+</body>
+</html>
